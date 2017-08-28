@@ -26,15 +26,15 @@ vars_pull(d)
 
 clear ad
 do_MUA = false;
-do_part = false;
+do_part = true;
 do_AP = true;
 
 ad = ArnaudDat(d,'WI03021@o.mat',do_MUA,do_part);
 ad.calc_trialblocks(do_AP);
 
 
-% ad.plot_raw(true);
-% ad.imagesc_raw;
+ad.plot_raw(true);
+ad.imagesc_raw;
 
 
 ad.plot_travg(true);
@@ -47,8 +47,10 @@ do_MUA = true;
 admua = ArnaudDat(d,'WI03021@o.mat',do_MUA,do_part);
 admua.calc_trialblocks(do_AP);
 
-ad.imagesc_travg; admua.overlay_travg(1:5:21,2,'k','LineWidth',2);
+ad.imagesc_travg; admua.overlay_travg(5:3:21,2,'k','LineWidth',1);
 
+
+ad.imagesc_raw; ad.overlay_raw(1:1:21,2,'k','LineWidth',1);
 
 %% Load and save all files!
 

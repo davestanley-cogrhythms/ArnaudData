@@ -174,6 +174,55 @@ classdef ArnaudDat < handle
             end
         end
         
+        function s = overlay_raw(s,channels_to_plot,upscale_val,varargin)
+            
+            %%
+            if nargin < 3
+                upscale_val = [];
+            end
+            if nargin < 2
+                channels_to_plot = [];
+            end
+
+            
+            plot_overlay(s.t,s.dat,s,channels_to_plot,upscale_val,varargin{:});
+            
+%             %%
+%             
+%             
+%             if nargin < 2
+%                 do_shift = false;
+%             end
+%             
+%             if ~s.do_part
+%                 error('Data set too large to plot. plot_raw only runs with do_part = false.');
+%             end
+%             
+%             d = s.dat;
+% 
+%             [~,~,method_name] = fileparts(calledby(0)); method_name = method_name(2:end);
+%             
+%             if do_shift
+%                 s.gcf{end+1} = figw('visible',s.visible); 
+%                 s.figtype{end+1} =  [method_name '_shift'];
+%                 plot_with_shift(s.t,d,s);
+%                 
+%             else
+%                 
+%                 % Plot data
+%                 s.gcf{end+1} = figw('visible',s.visible); 
+%                 plot_default(s.t,d(:,[1:3,end-1,end]),s);
+%                 s.figtype{end+1} = [method_name '_noshift'];          % Cheesy way of getting current method. Maybe there's a specific command for this...
+%                 
+%                 % Add tick markers
+%                 hold on;
+%                 % plot(t(pp1),dat(pp1,:),'k.');
+%                 % plot(t(pp2),dat(pp2,:),'r.');
+%                 plot(s.t(s.trig1),d(s.trig1,s.Nchan-1:s.Nchan),'k.');
+%                 plot(s.t(s.trig2),d(s.trig2,s.Nchan-1:s.Nchan),'r.');
+%             end
+        end
+        
         function s = imagesc_raw(s)
             
             time = s.t;
