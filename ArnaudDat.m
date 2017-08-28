@@ -266,8 +266,22 @@ classdef ArnaudDat < handle
                 if s.Ntrials > 0; plot_default(s.t_tr,dtr,s); end
                 s.figtype{end+1} = [method_name '_noshift'];
             end
+        end
+        
+        function s = overlay_travg(s,channels_to_plot,varargin)
             
+            if nargin < 2
+                channels_to_plot = [];
+            end
+
+            dtr = s.dat_tr;
+            dtr = squeeze(mean(dtr,2));
             
+
+            [~,~,method_name] = fileparts(calledby(0)); method_name = method_name(2:end);
+            
+            plot_overlay(s.t_tr,dtr,s,channels_to_plot,varargin{:});
+            s.figtype{end+1} = [method_name '_overlay'];
         end
         
         function s = imagesc_travg(s)
@@ -355,6 +369,37 @@ function plot_default(t,d,s)
 
 end
 
+function plot_overlay(t,d,s, channels_to_plot,varargin)
+
+
+    if nargin < 4
+        channels_to_plot = [];
+    end
+    
+    if isempty(channels_to_plot)
+        channels_to_plot = 1:s.Nchan;
+    end
+
+    % Adjust amplitude and vertical spacing of data
+    d = unitscore(d);                                   % Adjust data so that the minimum is at zero and the maximum is at 1
+    d = ampscale(d,min(diff(channels_to_plot)));        % Scale amplitude to be equal to the smallest spacing between chosen channels
+    
+    % Shift each channel by the channel number (e.g. so channel 1 will
+    % start at 1, channel 2 at 2, etc.)
+    shifts = 1:s.Nchan;
+    d = d + repmat(shifts,size(d,1),1);
+    
+    hold on;
+    plot(t,d(:,channels_to_plot),varargin{:});
+    
+    %xlabel('time (ms)');
+    %set(gca,'YTick',[]);
+    
+    %ylabel(s.myylabel);
+    %xlabel('time (ms)');
+    %title (format_title([s.fname ' # ch=' num2str(s.Nchan - 2) ' # tr=' num2str(s.Ntrials)]));
+
+end
 function plot_with_shift(t,d,s)
     Nchan = s.Nchan;
     plott_matrix3D(t,d(:,1:Nchan-2),'active_dim',3,'do_shift',mean(std(d,[],1))*2);
@@ -378,4 +423,27 @@ end
 
 function str = format_title(str)
     str = strrep(str,'_',' ' );
+end
+
+
+function X = unitscore(X)
+    % Adjust data so that the minimum is at zero and the maximum is at 1
+    sz = size(X);
+    for i = 1:sz(2)
+        Xc = X(:,i);
+        Xc = Xc ./ (max(Xc) - min(Xc));     % Normalize to 1
+        Xc = Xc - min(Xc);                  % Starts at zero.
+        X(:,i) = Xc;
+    end
+end
+
+
+function X = ampscale(X,val)
+    % Adjust data so that the minimum is at zero and the maximum is at 1
+    sz = size(X);
+    for i = 1:sz(2)
+        Xc = X(:,i);
+        Xc = Xc * val;      % Scale amplitude of this column to value
+        X(:,i) = Xc;
+    end
 end
