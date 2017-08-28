@@ -1,4 +1,7 @@
 
+%% Description
+% This is the script for plotting basic CSD and MUA data collected by
+% Arnaud.
 
 %% 
 

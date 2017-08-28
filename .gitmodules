@@ -1,0 +1,6 @@
+[submodule "lib_dav"]
+	path = lib_dav
+	url = https://github.com/davestanley-cogrhythms/lib_dav.git
+[submodule "MultiDimensionalDictionary"]
+	path = MultiDimensionalDictionary
+	url = https://github.com/davestanley/MultiDimensionalDictionary.git

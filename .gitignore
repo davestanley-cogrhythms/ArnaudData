@@ -1,3 +1,4 @@
+
 # globals
 *~
 #*#
@@ -8,11 +9,16 @@ octave-core
 # these files got dumped for some reason
 core.*
 
+# Pictures and saved data
+*.png
+*.mat
+
 
 # Mac/Linux/Windows files
 *.DS_Store
 .DS_Store
 Thumbs.db
+Icon*
 
 # Server files
 .nfs*
@@ -23,9 +29,3 @@ Thumbs.db
 # Publish
 #html
 
-# DynaSim output files
-solve_ode_*
-params.mat
-
-# Study folders
-study_*
