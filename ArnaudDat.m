@@ -268,8 +268,11 @@ classdef ArnaudDat < handle
             end
         end
         
-        function s = overlay_travg(s,channels_to_plot,varargin)
+        function s = overlay_travg(s,channels_to_plot,upscale_val,varargin)
             
+            if nargin < 3
+                upscale_val = [];
+            end
             if nargin < 2
                 channels_to_plot = [];
             end
@@ -280,7 +283,7 @@ classdef ArnaudDat < handle
 
             [~,~,method_name] = fileparts(calledby(0)); method_name = method_name(2:end);
             
-            plot_overlay(s.t_tr,dtr,s,channels_to_plot,varargin{:});
+            plot_overlay(s.t_tr,dtr,s,channels_to_plot,upscale_val,varargin{:});
             s.figtype{end+1} = [method_name '_overlay'];
         end
         
@@ -369,20 +372,29 @@ function plot_default(t,d,s)
 
 end
 
-function plot_overlay(t,d,s, channels_to_plot,varargin)
+function plot_overlay(t,d,s, channels_to_plot,upscale_val,varargin)
 
-
+    if nargin < 5
+        upscale_val = [];           % Amplitude scaling of MUA traces.
+                                    % 1 = MUA trace 1's max equals MUA
+                                    % trace'e 2's min. Larger numbers
+                                    % provide greater overlap
+    end
+    
     if nargin < 4
         channels_to_plot = [];
     end
     
+    if isempty(upscale_val)
+        upscale_val = 1;
+    end
     if isempty(channels_to_plot)
         channels_to_plot = 1:s.Nchan;
     end
 
     % Adjust amplitude and vertical spacing of data
-    d = unitscore(d);                                   % Adjust data so that the minimum is at zero and the maximum is at 1
-    d = ampscale(d,min(diff(channels_to_plot)));        % Scale amplitude to be equal to the smallest spacing between chosen channels
+    d = ampscore(d);                                                % Adjust data so that the minimum is at zero and the maximum is at 1
+    d = ampscale(d,min(diff(channels_to_plot))*upscale_val);        % Scale amplitude to be equal to the smallest spacing between chosen channels
     
     % Shift each channel by the channel number (e.g. so channel 1 will
     % start at 1, channel 2 at 2, etc.)
@@ -426,7 +438,7 @@ function str = format_title(str)
 end
 
 
-function X = unitscore(X)
+function X = ampscore(X)
     % Adjust data so that the minimum is at zero and the maximum is at 1
     sz = size(X);
     for i = 1:sz(2)
