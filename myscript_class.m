@@ -47,17 +47,17 @@ do_MUA = true;
 admua = ArnaudDat(d,'WI03021@o.mat',do_MUA,do_part);
 admua.calc_trialblocks(do_AP);
 
-ad.imagesc_travg; admua.overlay_travg(5:3:21,2,'k','LineWidth',1);
+% Plot trial averages
+ad.imagesc_travg; admua.overlay_travg(1:3:21,2,'k');
+
+% Plot raw
+ad.imagesc_raw; admua.overlay_raw(1:3:21,1,'k');
+ad.imagesc_raw; ad.overlay_raw(1:2:21,2,'k');
 
 
-ad.imagesc_raw; ad.overlay_raw(1:1:21,2,'k','LineWidth',1);
-
-%% Load and save all files!
+%% Figs1: Load and save all files! (No overlays; loopy version)
 
 n = dir(fullfile(mypath,'*.mat'));
-
-do_shift = true; 
-
 for i = 1:length(n)
     
     currfile = n(i).name;
@@ -95,4 +95,50 @@ for i = 1:length(n)
     end
     
 end
+
+
+
+%% Figs2: Load and save all files! (With MUA overlaid on CSD)
+
+n = dir(fullfile(mypath,'*.mat'));
+
+do_shift = true;
+
+for i = 1:length(n)
+    
+    currfile = n(i).name;
+    fprintf('Loading file %s...', currfile);
+    d = load(fullfile(mypath,currfile));
+    fprintf('Done.\n');
+    
+    % First, load part of data
+    clear ad admua
+    do_part = true;
+    ad = ArnaudDat(d,currfile,false,do_part,'off');
+    admua = ArnaudDat(d,currfile,true,do_part,'off');
+    
+    ad.plot_raw(false);
+    ad.imagesc_raw; admua.overlay_raw(1:3:21,1,'k');
+    ad.imagesc_raw; ad.overlay_raw(1:2:21,2,'k'); ad.figtype{end} = [ad.figtype{end} '2'];  % Rename figure so don't get duplicates
+    ad.save_openFigs;
+    ad.clearFigs;
+    
+    % Next, plot all trial averaged data
+    clear ad admua
+    do_part = false;
+    for do_AP = [false, true]
+        ad = ArnaudDat(d,currfile,false,do_part,'off');
+        admua = ArnaudDat(d,currfile,true,do_part,'off');
+        
+        ad.calc_trialblocks(do_AP);
+        admua.calc_trialblocks(do_AP);
+
+        ad.imagesc_travg; admua.overlay_travg(1:3:21,2,'k');
+        
+        ad.save_openFigs;
+        ad.clearFigs;
+        
+    end
+end
+
 

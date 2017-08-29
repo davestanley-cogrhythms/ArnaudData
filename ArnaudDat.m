@@ -43,10 +43,13 @@ classdef ArnaudDat < handle
     end
     
     methods
-        function s = ArnaudDat(d,fname,do_MUA,do_part)
+        function s = ArnaudDat(d,fname,do_MUA,do_part,visible)
             % Constructor!
             
             % Set up defaults
+            if nargin < 5
+                visible = [];
+            end
             if nargin < 4
                 do_part = [];
             end
@@ -56,13 +59,17 @@ classdef ArnaudDat < handle
             if nargin < 2
                 fname = [];
             end
-            if isempty(do_MUA)
-                do_MUA = false;
+            if isempty(visible)
+                visible = 'on';
             end
             if isempty(do_part)
                 do_part = true;
                 do_part = false;
             end
+            if isempty(do_MUA)
+                do_MUA = false;
+            end
+            
             
             if do_part
                 ind = 1:10000;               % Do part of dataset (~4 cycles)
@@ -119,6 +126,7 @@ classdef ArnaudDat < handle
             s.ind = ind;
             s.Nchan = Nchan;
             [~,fname,~] = fileparts(fname);
+            s.visible = visible;
             
             if do_MUA           % Append MUA information
                 fname = [fname '_MUA'];
@@ -159,24 +167,29 @@ classdef ArnaudDat < handle
                 plot_with_shift(s.t,d,s);
                 
             else
-                
+                show_trigger_traces = false;
                 % Plot data
                 s.gcf{end+1} = figw('visible',s.visible); 
-                plot_default(s.t,d(:,[1:3,end-1,end]),s);
+                %plot_default(s.t,d(:,[1:3,end-1,end]),s);
+                
+                plot_default(s.t,d(:,1:end),s,show_trigger_traces);
                 s.figtype{end+1} = [method_name '_noshift'];          % Cheesy way of getting current method. Maybe there's a specific command for this...
                 
-                % Add tick markers
-                hold on;
-                % plot(t(pp1),dat(pp1,:),'k.');
-                % plot(t(pp2),dat(pp2,:),'r.');
-                plot(s.t(s.trig1),d(s.trig1,s.Nchan-1:s.Nchan),'k.');
-                plot(s.t(s.trig2),d(s.trig2,s.Nchan-1:s.Nchan),'r.');
+                
+                if show_trigger_traces
+                    % Add tick markers
+                    hold on;
+                    % plot(t(pp1),dat(pp1,:),'k.');
+                    % plot(t(pp2),dat(pp2,:),'r.');
+                    plot(s.t(s.trig1),d(s.trig1,s.Nchan-1:s.Nchan),'k.');
+                    plot(s.t(s.trig2),d(s.trig2,s.Nchan-1:s.Nchan),'r.');
+                end
             end
         end
         
         function s = overlay_raw(s,channels_to_plot,upscale_val,varargin)
             
-            %%
+            
             if nargin < 3
                 upscale_val = [];
             end
@@ -187,40 +200,6 @@ classdef ArnaudDat < handle
             
             plot_overlay(s.t,s.dat,s,channels_to_plot,upscale_val,varargin{:});
             
-%             %%
-%             
-%             
-%             if nargin < 2
-%                 do_shift = false;
-%             end
-%             
-%             if ~s.do_part
-%                 error('Data set too large to plot. plot_raw only runs with do_part = false.');
-%             end
-%             
-%             d = s.dat;
-% 
-%             [~,~,method_name] = fileparts(calledby(0)); method_name = method_name(2:end);
-%             
-%             if do_shift
-%                 s.gcf{end+1} = figw('visible',s.visible); 
-%                 s.figtype{end+1} =  [method_name '_shift'];
-%                 plot_with_shift(s.t,d,s);
-%                 
-%             else
-%                 
-%                 % Plot data
-%                 s.gcf{end+1} = figw('visible',s.visible); 
-%                 plot_default(s.t,d(:,[1:3,end-1,end]),s);
-%                 s.figtype{end+1} = [method_name '_noshift'];          % Cheesy way of getting current method. Maybe there's a specific command for this...
-%                 
-%                 % Add tick markers
-%                 hold on;
-%                 % plot(t(pp1),dat(pp1,:),'k.');
-%                 % plot(t(pp2),dat(pp2,:),'r.');
-%                 plot(s.t(s.trig1),d(s.trig1,s.Nchan-1:s.Nchan),'k.');
-%                 plot(s.t(s.trig2),d(s.trig2,s.Nchan-1:s.Nchan),'r.');
-%             end
         end
         
         function s = imagesc_raw(s)
@@ -238,7 +217,12 @@ classdef ArnaudDat < handle
             
             
             % Plot Imagesc
-            s.gcf{end+1} = figw('visible',s.visible);  imagesc([time(1), time(end)],[],d'); axis xy; caxis([yl(1) yl(2)]); colorbar
+            s.gcf{end+1} = figw('visible',s.visible);  imagesc([time(1), time(end)],[],d'); axis xy; caxis([yl(1) yl(2)]); %colorbar
+            
+            % Add tic labels
+            addTicks(time,d(:,s.Nchan-1),'r');
+            addTicks(time,d(:,s.Nchan),'b');
+    
             [~,~,method_name] = fileparts(calledby(0));  method_name = method_name(2:end);
             s.figtype{end+1} = method_name;
             
@@ -346,7 +330,7 @@ classdef ArnaudDat < handle
             
             if s.Ntrials > 0
                 yl = [min(min(dtr(:,1:s.Nchan-2))),max(max(dtr(:,1:s.Nchan-2)))];       % Subtract 2 for the two spiking channels
-                s.gcf{end+1} = figw('visible',s.visible);  imagesc([ttr(1) ttr(end)],[],dtr'); caxis([yl(1) yl(2)]); colorbar
+                s.gcf{end+1} = figw('visible',s.visible);  imagesc([ttr(1) ttr(end)],[],dtr'); caxis([yl(1) yl(2)]); %colorbar
             else
                 s.gcf{end+1} = figw('visible',s.visible);
             end
@@ -372,7 +356,7 @@ classdef ArnaudDat < handle
                 curr_handle = s.gcf{i};
                 if ishandle(curr_handle)
                     filename = [fullfile(mypath,[s.fname '_' s.APname '_' s.figtype{i}]) '.png'];
-                    if exist([filename],'file'); error('File %s already exists! Exiting...'); end
+                    if exist([filename],'file'); error('File %s already exists! Exiting...',filename); end
                     set(curr_handle,'PaperPositionMode','auto');
                     fprintf('Saving %s ... ',filename);
                     tic; print(curr_handle,'-dpng','-r75','-opengl',filename);toc
@@ -408,9 +392,21 @@ function addTicks (t,d,colour)
 
 end
 
-function plot_default(t,d,s)
+function plot_default(t,d,s,show_trigger_traces)
 
-    plot(t,d);
+    if nargin < 4
+        show_trigger_traces = [];
+    end
+    
+    if isempty(show_trigger_traces)
+        show_trigger_traces = true;
+    end
+    
+    if show_trigger_traces
+        plot(t,d);
+    else
+        plot(t,d(:,1:end-2));
+    end
     
     xlabel('time (ms)');
     %set(gca,'YTick',[]);
@@ -418,6 +414,9 @@ function plot_default(t,d,s)
     ylabel(s.myylabel);
     xlabel('time (ms)');
     title (format_title([s.fname ' # ch=' num2str(s.Nchan - 2) ' # tr=' num2str(s.Ntrials)]));
+    
+    addTicks(t,d(:,s.Nchan-1),'r');
+    addTicks(t,d(:,s.Nchan),'b');
 
 end
 

@@ -18,12 +18,12 @@ plot_raw_on = true;
 
 %% do some basic plots
 % close all
-% ind = 1:30000;               % Do part of dataset
-ind = 1:length(cntm);               % Do full lenght of dataset
+ind = 1:30000;               % Do part of dataset
+% ind = 1:length(cntm);               % Do full lenght of dataset
 dt = mode(diff(time));
 
 % Format the data we're looking at
-dat0 = cntm(:,ind)';
+dat0 = cnte(:,ind)';
 trigchan1 = dat0(:,trigchan(1));
 trigchan2 = dat0(:,trigchan(2));
 
