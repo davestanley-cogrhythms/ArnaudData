@@ -4,3 +4,6 @@
 [submodule "MultiDimensionalDictionary"]
 	path = MultiDimensionalDictionary
 	url = https://github.com/davestanley/MultiDimensionalDictionary.git
+[submodule "chronux"]
+	path = chronux
+	url = git@github.com:cogrhythms/chronux.git
