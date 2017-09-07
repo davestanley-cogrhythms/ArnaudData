@@ -15,9 +15,12 @@ mypath = fullfile('..','Shared_Volume_1');
 
 %% Load a single
 % Load some data
-d = load(fullfile(mypath,'WI03021@o.mat'));
-% d = load(fullfile(mypath,'WI03022@o.mat'));
-clearvars -except d
+% fname = 'WI03021@o.mat';
+% fname = 'WI03022@o.mat';
+fname = 'WI10030@o.mat';
+d = load(fullfile(mypath,fname));
+
+clearvars -except d mypath
 
 vars_pull(d)
 
@@ -26,18 +29,18 @@ vars_pull(d)
 
 clear ad
 do_MUA = false;
-do_part = true;
+do_part = false;
 do_AP = true;
 
 ad = ArnaudDat(d,'WI03021@o.mat',do_MUA,do_part);
 ad.calc_trialblocks(do_AP);
 
 
-ad.plot_raw(true);
-ad.imagesc_raw;
+% ad.plot_raw(true);
+% ad.imagesc_raw;
 
 
-ad.plot_travg(true);
+% ad.plot_travg(true);
 ad.imagesc_travg;
 
 
@@ -47,12 +50,14 @@ do_MUA = true;
 admua = ArnaudDat(d,'WI03021@o.mat',do_MUA,do_part);
 admua.calc_trialblocks(do_AP);
 
+average_unplotted_traces = true;
+
 % Plot trial averages
-ad.imagesc_travg; admua.overlay_travg(1:3:21,2,'k');
+ad.imagesc_travg; admua.overlay_travg(1:3:21,2,average_unplotted_traces,'k');
 
 % Plot raw
-ad.imagesc_raw; admua.overlay_raw(1:3:21,1,'k');
-ad.imagesc_raw; ad.overlay_raw(1:2:21,2,'k');
+% ad.imagesc_raw; admua.overlay_raw(1:3:21,1,average_unplotted_traces,'k');
+% ad.imagesc_raw; ad.overlay_raw(1:2:21,2,average_unplotted_traces,'k');
 
 
 %% Figs1: Load and save all files! (No overlays; loopy version)
@@ -103,6 +108,7 @@ end
 n = dir(fullfile(mypath,'*.mat'));
 
 do_shift = true;
+average_unplotted_traces = true;
 
 for i = 1:length(n)
     
@@ -112,16 +118,16 @@ for i = 1:length(n)
     fprintf('Done.\n');
     
     % First, load part of data
-    clear ad admua
-    do_part = true;
-    ad = ArnaudDat(d,currfile,false,do_part,'off');
-    admua = ArnaudDat(d,currfile,true,do_part,'off');
-    
-    ad.plot_raw(false);
-    ad.imagesc_raw; admua.overlay_raw(1:3:21,1,'k');
-    ad.imagesc_raw; ad.overlay_raw(1:2:21,2,'k'); ad.figtype{end} = [ad.figtype{end} '2'];  % Rename figure so don't get duplicates
-    ad.save_openFigs;
-    ad.clearFigs;
+%     clear ad admua
+%     do_part = true;
+%     ad = ArnaudDat(d,currfile,false,do_part,'off');
+%     admua = ArnaudDat(d,currfile,true,do_part,'off');
+%     
+%     ad.plot_raw(false);
+%     ad.imagesc_raw; admua.overlay_raw(1:3:21,1,average_unplotted_traces,'k');
+%     ad.imagesc_raw; ad.overlay_raw(1:2:21,2,average_unplotted_traces,'k'); ad.figtype{end} = [ad.figtype{end} '2'];  % Rename figure so don't get duplicates
+%     ad.save_openFigs;
+%     ad.clearFigs;
     
     % Next, plot all trial averaged data
     clear ad admua
@@ -133,7 +139,7 @@ for i = 1:length(n)
         ad.calc_trialblocks(do_AP);
         admua.calc_trialblocks(do_AP);
 
-        ad.imagesc_travg; admua.overlay_travg(1:3:21,2,'k');
+        ad.imagesc_travg; admua.overlay_travg(1:3:21,2,average_unplotted_traces,'k');
         
         ad.save_openFigs;
         ad.clearFigs;

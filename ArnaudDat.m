@@ -45,7 +45,7 @@ classdef ArnaudDat < handle
     methods
         function s = ArnaudDat(d,fname,do_MUA,do_part,visible)
             % Constructor!
-            
+                        
             % Set up defaults
             if nargin < 5
                 visible = [];
@@ -87,7 +87,6 @@ classdef ArnaudDat < handle
             dt = mode(diff(time));
             t = time(ind);
             
-            
             % Extract pulse train times
             pp1 = anatrig{1};
             pp2 = anatrig{2};
@@ -99,7 +98,7 @@ classdef ArnaudDat < handle
             trig1 = pp2trig (pp1,thresh);
             trig2 = pp2trig (pp2,thresh);
             
-            % Format the data we're looking at
+            % Separate out desired MUA or CSD data, and trigger channels
             if do_MUA
                 dat0 = cntm(:,ind)';
             else
@@ -109,7 +108,12 @@ classdef ArnaudDat < handle
             trigchan2 = dat0(:,trigchan(2));
             dat = dat0(:,chansets(1):chansets(2));
             
-            % dat = diff(dat,2,2);       % 2nd difference to approx laplacean
+            % 2nd difference to approx laplacean
+            if ~do_MUA
+                % dat = diff(dat,2,2);              % This is probably not necessary 
+            end
+            
+            % Add trigger channels back in
             dat = cat(2,dat,trigchan1,trigchan2);   % Add back in pulse channels
             Nchan = size(dat,2);
             
@@ -187,22 +191,34 @@ classdef ArnaudDat < handle
             end
         end
         
-        function s = overlay_raw(s,channels_to_plot,upscale_val,varargin)
+        function s = overlay_raw(s,channels_to_plot,upscale_val,average_unplotted_traces,varargin)
             
-            
-            if nargin < 3
-                upscale_val = [];
+            if nargin < 4
+            % If only plotting a subset of all available channels (given by
+            % channels_to_plot), by default these channels will be
+            % discarded. However setting average_unplotted_traces will, for
+            % each channel given by channels_to_plot, pool all surrounding
+            % channels together, calculate an average, and plot this
+            % average. This will give smoother traces and not waste any
+            % data.
+                average_unplotted_traces = [];  % False = default
+            end
+            if nargin < 3               % Degree to which amplitude of traces are scaled upwards, beyond perfect non-overlapping spacing.
+                upscale_val = [];       % A value of 1.0 equals perfect non-overlapping spacing.
             end
             if nargin < 2
                 channels_to_plot = [];
             end
 
             
-            plot_overlay(s.t,s.dat,s,channels_to_plot,upscale_val,varargin{:});
+            plot_overlay(s.t,s.dat,s,channels_to_plot,upscale_val,average_unplotted_traces,varargin{:});
             
         end
         
         function s = imagesc_raw(s)
+            
+            do_symmetric_yl = 1;
+            invert_colours = 0;
             
             time = s.t;
             d = s.dat;
@@ -215,6 +231,11 @@ classdef ArnaudDat < handle
             % Find y limits.
             yl = [min(min(d(:,1:s.Nchan-2))),max(max(d(:,1:s.Nchan-2)))];       % Subtract 2 for the two spiking channels
             
+            % Make symmetric if necessary
+            if do_symmetric_yl
+                temp = max(abs(yl));
+                yl = [-temp, temp];
+            end
             
             % Plot Imagesc
             s.gcf{end+1} = figw('visible',s.visible);  imagesc([time(1), time(end)],[],d'); axis xy; caxis([yl(1) yl(2)]); %colorbar
@@ -231,7 +252,12 @@ classdef ArnaudDat < handle
             ylabel('channel #');
             title (format_title([s.fname ' # ch=' num2str(s.Nchan - 2) ' # tr=' num2str(s.Ntrials)]));
             
-            colormap jet
+            if invert_colours
+                colormap(flipud(jet));
+            else
+                colormap(jet);
+            end
+            colorbar;
         end
         
         function s = calc_trialblocks(s,do_AP)
@@ -301,7 +327,18 @@ classdef ArnaudDat < handle
             end
         end
         
-        function s = overlay_travg(s,channels_to_plot,upscale_val,varargin)
+        function s = overlay_travg(s,channels_to_plot,upscale_val,average_unplotted_traces,varargin)
+            
+            if nargin < 4
+            % If only plotting a subset of all available channels (given by
+            % channels_to_plot), by default these channels will be
+            % discarded. However setting average_unplotted_traces will, for
+            % each channel given by channels_to_plot, pool all surrounding
+            % channels together, calculate an average, and plot this
+            % average. This will give smoother traces and not waste any
+            % data.
+                average_unplotted_traces = [];
+            end
             
             if nargin < 3
                 upscale_val = [];
@@ -316,12 +353,14 @@ classdef ArnaudDat < handle
 
             [~,~,method_name] = fileparts(calledby(0)); method_name = method_name(2:end);
             
-            plot_overlay(s.t_tr,dtr,s,channels_to_plot,upscale_val,varargin{:});
-            s.figtype{end+1} = [method_name '_overlay'];
+            plot_overlay(s.t_tr,dtr,s,channels_to_plot,upscale_val,average_unplotted_traces,varargin{:});
+            
         end
         
         function s = imagesc_travg(s)
             
+            do_symmetric_yl = 1;
+            invert_colours = 0;
             
             
             dtr = s.dat_tr;
@@ -330,6 +369,10 @@ classdef ArnaudDat < handle
             
             if s.Ntrials > 0
                 yl = [min(min(dtr(:,1:s.Nchan-2))),max(max(dtr(:,1:s.Nchan-2)))];       % Subtract 2 for the two spiking channels
+                if do_symmetric_yl
+                    temp = max(abs(yl));
+                    yl = [-temp, temp];
+                end
                 s.gcf{end+1} = figw('visible',s.visible);  imagesc([ttr(1) ttr(end)],[],dtr'); caxis([yl(1) yl(2)]); %colorbar
             else
                 s.gcf{end+1} = figw('visible',s.visible);
@@ -341,7 +384,12 @@ classdef ArnaudDat < handle
             ylabel('channel #');
             title (format_title([s.fname ' # ch=' num2str(s.Nchan - 2) ' # tr=' num2str(s.Ntrials)]));
             
-            colormap jet
+            if invert_colours
+                colormap(flipud(jet));
+            else
+                colormap(jet);
+            end
+            colorbar;
             
         end
         
@@ -420,24 +468,56 @@ function plot_default(t,d,s,show_trigger_traces)
 
 end
 
-function plot_overlay(t,d,s, channels_to_plot,upscale_val,varargin)
+function plot_overlay(t,d,s,channels_to_plot,upscale_val,average_unplotted_traces,varargin)
 
+    if nargin < 6
+        average_unplotted_traces = [];
+    end
     if nargin < 5
         upscale_val = [];           % Amplitude scaling of MUA traces.
                                     % 1 = MUA trace 1's max equals MUA
                                     % trace'e 2's min. Larger numbers
                                     % provide greater overlap
     end
-    
     if nargin < 4
         channels_to_plot = [];
     end
-    
+    if isempty(average_unplotted_traces)
+        average_unplotted_traces = false;
+    end
     if isempty(upscale_val)
         upscale_val = 1;
     end
     if isempty(channels_to_plot)
         channels_to_plot = 1:s.Nchan;
+    end
+    
+    % If doing average of unplotted traces, then each of the chosen plotted
+    % traces should be the average of the surrounding traces.
+    NcNT = s.Nchan - 2;                     % There are usually 25 channels, and channels 24 and 25 are trigger channels.
+                                            % Don't average these
+    if average_unplotted_traces
+        channels_to_plot_temp = [1, channels_to_plot, NcNT];     % Add some padding to ensure we don't exceed the dimensions
+        for i = 1:length(channels_to_plot)
+            i2 = i+1;                % Index location of channels_to_plot in channels_to_plot_temp
+            
+            % Get left channel boundary
+            temp = floor([channels_to_plot_temp(i2-1)+channels_to_plot_temp(i2)]/2)+1;
+            temp = max(temp,1);                     % Left boundry must be: 1 <= left boundary <= current channel.
+            lch = min(temp,channels_to_plot(i));
+            
+            % Get right channel boundary
+            temp = floor([channels_to_plot_temp(i2)+channels_to_plot_temp(i2+1)]/2);
+            temp = min(temp,NcNT);                     % Right boundry must be: current channel <= current channel <= 23 (Nchan-2)
+            rch = max(temp,channels_to_plot(i));
+            
+            fprintf('Averaging across channels: Left channel=%d, current channel=%d, right channel=%d\n',lch,channels_to_plot(i),rch);
+            
+            % Lastly, do the average and drop this into the current channel
+            d(:,channels_to_plot(i)) = mean(d(:,lch:rch),2);
+            
+        end
+        
     end
 
     % Adjust amplitude and vertical spacing of data

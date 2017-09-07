@@ -4,7 +4,7 @@
 % Arnaud.
 
 %% 
-
+startup
 mypath = fullfile('..','Shared_Volume_1');
 
 % Load some data
@@ -16,9 +16,14 @@ vars_pull(d)
 
 plot_raw_on = true;
 
+%% PSD / Spectrogram plots
+
+figure; plott_spect(t/1000,dat(:,10),'axis_lims',[0 50],'logplot',1,'Nwind',2000)
+figure; plott_all(t/1000,dat(:,10),'axis_lims',[0 50],'logplot',1,'psd_on',1,'fsubplot',@subplotrows,'Nwind',2000)
+
 %% do some basic plots
 % close all
-ind = 1:30000;               % Do part of dataset
+ind = 1:90000;               % Do part of dataset
 % ind = 1:length(cntm);               % Do full lenght of dataset
 dt = mode(diff(time));
 
